@@ -18,7 +18,7 @@ terraform {
   required_providers {
     sealedsecrets = {
       source = "haf/sealedsecrets"
-      version = "0.2.1"
+      version = "0.2.4"
     }
   }
 }
