@@ -1,36 +1,36 @@
 package sealedsecrets
 
 import (
-    "os"
-    "fmt"
-    "log"
-    "bytes"
-    "strconv"
-    "context"
-    "sync"
+	"bytes"
+	"context"
+	"fmt"
+	"log"
+	"os"
+	"strconv"
+	"sync"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-    "github.com/mitchellh/go-homedir"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/kita99/terraform-provider-sealedsecrets/utils/kubectl"
+	"github.com/mitchellh/go-homedir"
 
-    "k8s.io/client-go/kubernetes"
-    "k8s.io/client-go/tools/clientcmd"
-    clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
-    restclient "k8s.io/client-go/rest"
-    aggregator "k8s.io/kube-aggregator/pkg/client/clientset_generated/clientset"
+	"k8s.io/client-go/kubernetes"
+	restclient "k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
+	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
+	aggregator "k8s.io/kube-aggregator/pkg/client/clientset_generated/clientset"
 )
 
 func Provider() *schema.Provider {
 	return &schema.Provider{
 		Schema: map[string]*schema.Schema{
-            "apply_retry_count": {
+			"apply_retry_count": {
 				Type:        schema.TypeInt,
 				Optional:    true,
 				DefaultFunc: func() (interface{}, error) { return 1, nil },
 				Description: "Defines the number of attempts any create/update action will take",
 			},
-            "kubernetes": {
+			"kubernetes": {
 				Type:        schema.TypeList,
 				MaxItems:    1,
 				Optional:    true,
@@ -126,7 +126,7 @@ func kubernetesResource() *schema.Resource {
 				DefaultFunc: schema.EnvDefaultFunc("KUBE_TOKEN", ""),
 				Description: "Token to authenticate an service account",
 			},
-            "load_config_file": {
+			"load_config_file": {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("KUBE_LOAD_CONFIG_FILE", false),
@@ -210,9 +210,9 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 	var cfg *restclient.Config
 	var err error
 	if v, ok := k8sGetOk(d, "load_config_file"); ok {
-        if v.(bool) {
-            cfg, err = tryLoadingConfigFile(d)
-        }
+		if v.(bool) {
+			cfg, err = tryLoadingConfigFile(d)
+		}
 	}
 
 	kubectlApplyRetryCount = uint64(d.Get("apply_retry_count").(int))
@@ -294,7 +294,7 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 }
 
 func tryLoadingConfigFile(d *schema.ResourceData) (*restclient.Config, error) {
-    configPath, ok := k8sGetOk(d, "config_path")
+	configPath, ok := k8sGetOk(d, "config_path")
 	if !ok {
 		return nil, fmt.Errorf("Cant't load config file without config_path set")
 	}
