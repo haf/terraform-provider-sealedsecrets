@@ -1,5 +1,4 @@
-terraform-provider-sealedsecrets
-================================
+# Terraform Provider: `haf/sealedsecrets`
 
 This is a fork of [rockyhmchen's terraform-provider-sealedsecrets](https://github.com/rockyhmchen/terraform-provider-sealedsecrets), published under [kita99/sealedsecrets](https://registry.terraform.io/providers/kita99/sealedsecrets/latest).
 
@@ -23,21 +22,29 @@ terraform {
   }
 }
 
-provider "sealedsecrets" {
-  kubernetes {
-    host                   = data.aws_eks_cluster.cluster.endpoint
-    cluster_ca_certificate = base64decode(data.aws_eks_cluster.cluster.certificate_authority.0.data)
-    token                  = data.aws_eks_cluster_auth.cluster.token
-  }
+data "google_container_cluster" "main" {
+  name     = "main"
+  project  = "logary-prod"
+  location = "europe-west4"
 }
 
-resource "sealedsecrets_secret" "my_secret" {
+provider "kubernetes" {
+  host                   = "https://${data.google_container_cluster.main.endpoint}"
+  token                  = data.google_client_config.provider.access_token
+  cluster_ca_certificate = base64decode(data.google_container_cluster.main.master_auth[0].cluster_ca_certificate)
+}
+
+provider "sealedsecrets" {
+  kubernetes = provider.kubernetes
+}
+
+resource "sealedsecrets_secret" "pg_credentials" {
   type                 = "Opaque"
   name                 = "pg-credentials"
   namespace            = "apps"
   controller_name      = "sealed-secret-controller"
   controller_namespace = "kube-system"
-  depends_on           = [kubernetes_namespace.example_ns]
+  depends_on           = []
   secrets = {
     key = "value"
   }
@@ -93,3 +100,10 @@ Same as `Create`
 #### Delete
 
 Removes SealedSecret object from the cluster and deletes terraform state.
+
+
+# References
+
+- https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2@v2.6.1
+- https://registry.terraform.io/publish/provider/github/haf
+- https://registry.terraform.io/settings/gpg-keys
