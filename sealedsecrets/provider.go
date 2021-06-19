@@ -9,9 +9,9 @@ import (
 	"strconv"
 	"sync"
 
+	"github.com/haf/terraform-provider-sealedsecrets/utils/kubectl"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/kita99/terraform-provider-sealedsecrets/utils/kubectl"
 	"github.com/mitchellh/go-homedir"
 
 	"k8s.io/client-go/kubernetes"

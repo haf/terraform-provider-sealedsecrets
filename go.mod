@@ -1,4 +1,4 @@
-module github.com/kita99/terraform-provider-sealedsecrets
+module github.com/haf/terraform-provider-sealedsecrets
 
 go 1.16
 

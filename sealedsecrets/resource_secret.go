@@ -1,19 +1,19 @@
 package sealedsecrets
 
 import (
+	"context"
+	b64 "encoding/base64"
 	"fmt"
 	"log"
-    b64 "encoding/base64"
-    "context"
-    "time"
+	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/cenkalti/backoff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-    "github.com/cenkalti/backoff"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	"github.com/kita99/terraform-provider-sealedsecrets/utils/kubeseal"
-	"github.com/kita99/terraform-provider-sealedsecrets/utils/kubectl"
-	"github.com/kita99/terraform-provider-sealedsecrets/utils"
+	"github.com/haf/terraform-provider-sealedsecrets/utils"
+	"github.com/haf/terraform-provider-sealedsecrets/utils/kubectl"
+	"github.com/haf/terraform-provider-sealedsecrets/utils/kubeseal"
 )
 
 func resourceSecret() *schema.Resource {
@@ -24,37 +24,37 @@ func resourceSecret() *schema.Resource {
 		DeleteContext: resourceSecretDelete,
 
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "Name of the secret, must be unique",
 			},
-			"namespace": &schema.Schema{
+			"namespace": {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "Namespace of the secret",
 			},
-			"type": &schema.Schema{
+			"type": {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "The secret type (ex. Opaque)",
 			},
-			"secrets": &schema.Schema{
+			"secrets": {
 				Type:        schema.TypeMap,
 				Required:    true,
 				Description: "Key/value pairs to populate the secret",
 			},
-			"controller_name": &schema.Schema{
+			"controller_name": {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "Name of the SealedSecrets controller in the cluster",
 			},
-			"controller_namespace": &schema.Schema{
+			"controller_namespace": {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "Namespace of the SealedSecrets controller in the cluster",
 			},
-			"manifest": &schema.Schema{
+			"manifest": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "",
@@ -65,44 +65,44 @@ func resourceSecret() *schema.Resource {
 
 func resourceSecretCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	log.Printf("resourceSecretCreate")
-    // 1. Generate manifest
-    sealedSecretManifest, err := createSealedSecret(d, m.(*kubectl.KubeProvider))
-    if err != nil {
-        return diag.FromErr(err)
-    }
+	// 1. Generate manifest
+	sealedSecretManifest, err := createSealedSecret(d, m.(*kubectl.KubeProvider))
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
-    // 2. Apply against cluster
-    exponentialBackoffConfig := backoff.NewExponentialBackOff()
-    exponentialBackoffConfig.InitialInterval = 3 * time.Second
-    exponentialBackoffConfig.MaxInterval = 30 * time.Second
+	// 2. Apply against cluster
+	exponentialBackoffConfig := backoff.NewExponentialBackOff()
+	exponentialBackoffConfig.InitialInterval = 3 * time.Second
+	exponentialBackoffConfig.MaxInterval = 30 * time.Second
 
-    if kubectlApplyRetryCount > 0 {
-        retryConfig := backoff.WithMaxRetries(exponentialBackoffConfig, kubectlApplyRetryCount)
-        retryErr := backoff.Retry(func() error {
-            resourceId, err := kubectl.ResourceKubectlManifestApply(ctx, sealedSecretManifest, true, m.(*kubectl.KubeProvider))
-            if err != nil {
-                log.Printf("[ERROR] creating manifest failed: %+v", err)
-            }
+	if kubectlApplyRetryCount > 0 {
+		retryConfig := backoff.WithMaxRetries(exponentialBackoffConfig, kubectlApplyRetryCount)
+		retryErr := backoff.Retry(func() error {
+			resourceId, err := kubectl.ResourceKubectlManifestApply(ctx, sealedSecretManifest, true, m.(*kubectl.KubeProvider))
+			if err != nil {
+				log.Printf("[ERROR] creating manifest failed: %+v", err)
+			}
 
-            d.Set("manifest", sealedSecretManifest)
-            d.SetId(resourceId)
-            return err
-        }, retryConfig)
+			d.Set("manifest", sealedSecretManifest)
+			d.SetId(resourceId)
+			return err
+		}, retryConfig)
 
-        if retryErr != nil {
-            return diag.FromErr(retryErr)
-        }
-    } else {
-        resourceId, err := kubectl.ResourceKubectlManifestApply(ctx, sealedSecretManifest, true, m.(*kubectl.KubeProvider))
-        if (err != nil) {
-            return diag.FromErr(err)
-        }
+		if retryErr != nil {
+			return diag.FromErr(retryErr)
+		}
+	} else {
+		resourceId, err := kubectl.ResourceKubectlManifestApply(ctx, sealedSecretManifest, true, m.(*kubectl.KubeProvider))
+		if err != nil {
+			return diag.FromErr(err)
+		}
 
-        d.Set("manifest", sealedSecretManifest)
-        d.SetId(resourceId)
-    }
+		d.Set("manifest", sealedSecretManifest)
+		d.SetId(resourceId)
+	}
 
-    // 3. Call read
+	// 3. Call read
 	return resourceSecretRead(ctx, d, m)
 }
 
@@ -110,13 +110,13 @@ func resourceSecretDelete(ctx context.Context, d *schema.ResourceData, m interfa
 	log.Printf("resourceSecretDelete")
 
 	manifest := d.Get("manifest").(string)
-    if manifest == "" {
-        return nil
-    }
+	if manifest == "" {
+		return nil
+	}
 
-    if err := kubectl.ResourceKubectlManifestDelete(ctx, manifest, true, m.(*kubectl.KubeProvider)); err != nil {
-        return diag.FromErr(err)
-    }
+	if err := kubectl.ResourceKubectlManifestDelete(ctx, manifest, true, m.(*kubectl.KubeProvider)); err != nil {
+		return diag.FromErr(err)
+	}
 
 	return nil
 }
@@ -124,20 +124,20 @@ func resourceSecretDelete(ctx context.Context, d *schema.ResourceData, m interfa
 func resourceSecretRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	log.Printf("resourceSecretRead")
 
-    manifest := d.Get("manifest").(string)
+	manifest := d.Get("manifest").(string)
 
-    if manifest == "" {
-        return nil
-    }
+	if manifest == "" {
+		return nil
+	}
 
-    isGone, err := kubectl.ResourceKubectlManifestRead(ctx, manifest, m);
-    if err != nil {
-        return diag.FromErr(err)
-    }
+	isGone, err := kubectl.ResourceKubectlManifestRead(ctx, manifest, m)
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
-    if isGone {
-        d.SetId("")
-    }
+	if isGone {
+		d.SetId("")
+	}
 
 	return nil
 }
@@ -145,15 +145,15 @@ func resourceSecretRead(ctx context.Context, d *schema.ResourceData, m interface
 func resourceSecretUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	log.Printf("resourceSecretUpdate")
 
-    if d.HasChange("name") {
-        if err := resourceSecretDelete(ctx, d, m); err != nil {
-            return err
-        }
-    }
+	if d.HasChange("name") {
+		if err := resourceSecretDelete(ctx, d, m); err != nil {
+			return err
+		}
+	}
 
-    if d.HasChange("name") || d.HasChange("secrets") || d.HasChange("type")  {
-        return resourceSecretCreate(ctx, d, m)
-    }
+	if d.HasChange("name") || d.HasChange("secrets") || d.HasChange("type") {
+		return resourceSecretCreate(ctx, d, m)
+	}
 
 	return nil
 }
@@ -161,18 +161,18 @@ func resourceSecretUpdate(ctx context.Context, d *schema.ResourceData, m interfa
 func createSealedSecret(d *schema.ResourceData, kubeProvider *kubectl.KubeProvider) (string, error) {
 	log.Printf("createSealedSecret")
 
-	secrets := d.Get("secrets").(map[string]interface {})
+	secrets := d.Get("secrets").(map[string]interface{})
 	name := d.Get("name").(string)
 	namespace := d.Get("namespace").(string)
 	_type := d.Get("type").(string)
 
-    secretsBase64 := map[string]interface{}{}
-    for key, value := range secrets {
-        strValue := fmt.Sprintf("%v", value)
-        secretsBase64[key] = b64.StdEncoding.EncodeToString([]byte(strValue))
-    }
+	secretsBase64 := map[string]interface{}{}
+	for key, value := range secrets {
+		strValue := fmt.Sprintf("%v", value)
+		secretsBase64[key] = b64.StdEncoding.EncodeToString([]byte(strValue))
+	}
 
-    secretManifest, err := utils.GenerateSecretManifest(name, namespace, _type, secretsBase64)
+	secretManifest, err := utils.GenerateSecretManifest(name, namespace, _type, secretsBase64)
 	if err != nil {
 		return "", err
 	}
@@ -180,21 +180,21 @@ func createSealedSecret(d *schema.ResourceData, kubeProvider *kubectl.KubeProvid
 	controllerName := d.Get("controller_name").(string)
 	controllerNamespace := d.Get("controller_namespace").(string)
 
-    rawCertificate, err := kubeseal.FetchCertificate(controllerName, controllerNamespace, kubeProvider)
+	rawCertificate, err := kubeseal.FetchCertificate(controllerName, controllerNamespace, kubeProvider)
 	if err != nil {
 		return "", err
 	}
 	defer rawCertificate.Close()
 
-    publicKey, err := kubeseal.ParseKey(rawCertificate)
+	publicKey, err := kubeseal.ParseKey(rawCertificate)
 	if err != nil {
 		return "", err
 	}
 
-    sealedSecretManifest, err := kubeseal.Seal(secretManifest, publicKey, 0, false)
-    if err != nil {
-        return "", err
-    }
+	sealedSecretManifest, err := kubeseal.Seal(secretManifest, publicKey, 0, false)
+	if err != nil {
+		return "", err
+	}
 
-    return sealedSecretManifest, nil
+	return sealedSecretManifest, nil
 }

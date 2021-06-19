@@ -1,8 +1,8 @@
 package main
 
 import (
+	"github.com/haf/terraform-provider-sealedsecrets/sealedsecrets"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/plugin"
-	"github.com/kita99/terraform-provider-sealedsecrets/sealedsecrets"
 )
 
 func main() {

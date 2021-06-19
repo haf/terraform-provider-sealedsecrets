@@ -1,25 +1,25 @@
 package kubeseal
 
 import (
-    "fmt"
-    "io"
-    "errors"
-    "io/ioutil"
-    "context"
-    "crypto/rsa"
-    "bytes"
+	"bytes"
+	"context"
+	"crypto/rsa"
+	"errors"
+	"fmt"
+	"io"
+	"io/ioutil"
 
-    corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
-    ssv1alpha1 "github.com/bitnami-labs/sealed-secrets/pkg/apis/sealed-secrets/v1alpha1"
-    "k8s.io/apimachinery/pkg/runtime"
-    runtimeserializer "k8s.io/apimachinery/pkg/runtime/serializer"
-    metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-    "github.com/bitnami-labs/sealed-secrets/pkg/multidocyaml"
-    v1 "k8s.io/api/core/v1"
-    "k8s.io/client-go/kubernetes/scheme"
-    "k8s.io/client-go/util/cert"
+	ssv1alpha1 "github.com/bitnami-labs/sealed-secrets/pkg/apis/sealed-secrets/v1alpha1"
+	"github.com/bitnami-labs/sealed-secrets/pkg/multidocyaml"
+	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	runtimeserializer "k8s.io/apimachinery/pkg/runtime/serializer"
+	"k8s.io/client-go/kubernetes/scheme"
+	corev1 "k8s.io/client-go/kubernetes/typed/core/v1"
+	"k8s.io/client-go/util/cert"
 
-	"github.com/kita99/terraform-provider-sealedsecrets/utils/kubectl"
+	"github.com/haf/terraform-provider-sealedsecrets/utils/kubectl"
 )
 
 func prettyEncoder(codecs runtimeserializer.CodecFactory, mediaType string, gv runtime.GroupVersioner) (runtime.Encoder, error) {
@@ -62,8 +62,8 @@ func FetchCertificate(controllerName string, controllerNamespace string, kubePro
 		return nil, err
 	}
 
-    ctx, cancel := context.WithCancel(context.Background())
-    defer cancel()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
 	f, err := restClient.
 		Services(controllerNamespace).
@@ -101,8 +101,8 @@ func ParseKey(r io.Reader) (*rsa.PublicKey, error) {
 }
 
 func Seal(in io.Reader, pubKey *rsa.PublicKey, scope ssv1alpha1.SealingScope, allowEmptyData bool) (string, error) {
-    sealedSecretManifest := new (bytes.Buffer)
-    codecs := scheme.Codecs
+	sealedSecretManifest := new(bytes.Buffer)
+	codecs := scheme.Codecs
 
 	secret, err := readSecret(codecs.UniversalDecoder(), in)
 	if err != nil {
@@ -136,7 +136,7 @@ func Seal(in io.Reader, pubKey *rsa.PublicKey, scope ssv1alpha1.SealingScope, al
 	}
 
 	var contentType string
-    contentType = runtime.ContentTypeYAML
+	contentType = runtime.ContentTypeYAML
 
 	prettyEnc, err := prettyEncoder(codecs, contentType, ssv1alpha1.SchemeGroupVersion)
 	if err != nil {
@@ -147,6 +147,6 @@ func Seal(in io.Reader, pubKey *rsa.PublicKey, scope ssv1alpha1.SealingScope, al
 		return "", err
 	}
 
-    sealedSecretManifest.Write(buf)
+	sealedSecretManifest.Write(buf)
 	return sealedSecretManifest.String(), nil
 }
