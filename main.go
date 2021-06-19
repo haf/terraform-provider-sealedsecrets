@@ -6,6 +6,6 @@ import (
 )
 
 func main() {
-    opts := &plugin.ServeOpts{ProviderFunc: sealedsecrets.Provider}
-    plugin.Serve(opts)
+	opts := &plugin.ServeOpts{ProviderFunc: sealedsecrets.Provider}
+	plugin.Serve(opts)
 }
