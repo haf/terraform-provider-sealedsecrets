@@ -1,15 +1,15 @@
 package utils
 
 import (
-    "io"
+	"bytes"
 	"crypto/sha256"
 	"fmt"
-	"bytes"
-    "text/template"
+	"io"
+	"text/template"
 )
 
 var (
-    secretManifestTemplate = `
+	secretManifestTemplate = `
 apiVersion: v1
 data:
   {{- range $key, $value := .Secrets }}
@@ -24,10 +24,10 @@ type: {{ .Type }}`
 )
 
 type SecretManifest struct {
-    Name string
-    Namespace string
-    Type string
-    Secrets map[string]interface {}
+	Name      string
+	Namespace string
+	Type      string
+	Secrets   map[string]interface{}
 }
 
 func SHA256(src string) string {
@@ -36,23 +36,23 @@ func SHA256(src string) string {
 	return fmt.Sprintf("%x", h.Sum(nil))
 }
 
-func GenerateSecretManifest(name string, namespace string, _type string, secrets map[string]interface {}) (io.Reader, error) {
-    secretManifestYAML := new(bytes.Buffer)
+func GenerateSecretManifest(name string, namespace string, _type string, secrets map[string]interface{}) (io.Reader, error) {
+	secretManifestYAML := new(bytes.Buffer)
 
-    secretManifest := SecretManifest{
-        Name: name,
-        Namespace: namespace,
-        Type: _type,
-        Secrets: secrets,
-    }
+	secretManifest := SecretManifest{
+		Name:      name,
+		Namespace: namespace,
+		Type:      _type,
+		Secrets:   secrets,
+	}
 
-    t := template.Must(template.New("secretManifestTemplate").Parse(secretManifestTemplate))
-    err := t.Execute(secretManifestYAML, secretManifest)
+	t := template.Must(template.New("secretManifestTemplate").Parse(secretManifestTemplate))
+	err := t.Execute(secretManifestYAML, secretManifest)
 	if err != nil {
 		return nil, err
 	}
 
-    return secretManifestYAML, nil
+	return secretManifestYAML, nil
 }
 
 func ExpandStringSlice(s []interface{}) []string {
@@ -67,4 +67,3 @@ func ExpandStringSlice(s []interface{}) []string {
 	}
 	return result
 }
-

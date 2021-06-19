@@ -4,21 +4,22 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-    "regexp"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"io/ioutil"
-	"k8s.io/cli-runtime/pkg/printers"
-	"os"
-	"time"
 	"log"
+	"os"
+	"regexp"
 	"strings"
+	"time"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"k8s.io/cli-runtime/pkg/printers"
 
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	k8sresource "k8s.io/cli-runtime/pkg/resource"
+	diskcached "k8s.io/client-go/discovery/cached/disk"
 	apiregistration "k8s.io/kube-aggregator/pkg/apis/apiregistration/v1"
 	"k8s.io/kubectl/pkg/cmd/apply"
 	k8sdelete "k8s.io/kubectl/pkg/cmd/delete"
-    diskcached "k8s.io/client-go/discovery/cached/disk"
 
 	"github.com/icza/dyno"
 
@@ -29,16 +30,17 @@ import (
 	k8sschema "k8s.io/apimachinery/pkg/runtime/schema"
 	yamlWriter "sigs.k8s.io/yaml"
 
+	"path/filepath"
+
+	"github.com/mitchellh/go-homedir"
+	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/client-go/discovery"
 	"k8s.io/client-go/dynamic"
-    aggregator "k8s.io/kube-aggregator/pkg/client/clientset_generated/clientset"
-    "k8s.io/client-go/rest"
-    "k8s.io/client-go/kubernetes"
-    "k8s.io/client-go/tools/clientcmd"
-    "k8s.io/apimachinery/pkg/api/meta"
-    "path/filepath"
-    "k8s.io/client-go/restmapper"
-    "github.com/mitchellh/go-homedir"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/restmapper"
+	"k8s.io/client-go/tools/clientcmd"
+	aggregator "k8s.io/kube-aggregator/pkg/client/clientset_generated/clientset"
 )
 
 type KubeProvider struct {
@@ -176,7 +178,7 @@ func ResourceKubectlManifestApply(ctx context.Context, yaml string, waitForRolou
 
 	log.Printf("[DEBUG] %v fetched successfully, set id to: %v", manifest, selfLink)
 
-    return selfLink, nil
+	return selfLink, nil
 }
 
 func ResourceKubectlManifestRead(ctx context.Context, yaml string, meta interface{}) (bool, error) {

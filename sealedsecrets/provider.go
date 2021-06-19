@@ -227,7 +227,7 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 	cfg.Burst = 100
 
 	// Overriding with static configuration
-	cfg.UserAgent = fmt.Sprintf("HashiCorp/1.0 Terraform")
+	cfg.UserAgent = "HashiCorp/1.0 Terraform"
 
 	if v, ok := k8sGetOk(d, "host"); ok {
 		cfg.Host = v.(string)

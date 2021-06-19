@@ -66,6 +66,7 @@ func resourceSecret() *schema.Resource {
 
 func resourceSecretCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	log.Printf("resourceSecretCreate")
+
 	// 1. Generate manifest
 	sealedSecretManifest, err := createSealedSecret(d, m.(*kubectl.KubeProvider))
 	if err != nil {
