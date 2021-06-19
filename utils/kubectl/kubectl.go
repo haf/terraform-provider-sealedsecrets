@@ -64,14 +64,14 @@ func (p *KubeProvider) ToDiscoveryClient() (discovery.CachedDiscoveryInterface, 
 }
 
 func (p *KubeProvider) ToRESTMapper() (meta.RESTMapper, error) {
-	discoveryClient, _ := p.ToDiscoveryClient()
-	if discoveryClient != nil {
-		mapper := restmapper.NewDeferredDiscoveryRESTMapper(discoveryClient)
-		expander := restmapper.NewShortcutExpander(mapper, discoveryClient)
-		return expander, nil
+	discoveryClient, err := p.ToDiscoveryClient()
+	if err != nil {
+		return nil, fmt.Errorf("p.ToDiscoveryClient() failed - no restmapper available")
 	}
 
-	return nil, fmt.Errorf("no restmapper")
+	mapper := restmapper.NewDeferredDiscoveryRESTMapper(discoveryClient)
+	expander := restmapper.NewShortcutExpander(mapper, discoveryClient)
+	return expander, nil
 }
 
 const (
