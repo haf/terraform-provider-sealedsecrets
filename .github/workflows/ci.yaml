@@ -1,9 +1,17 @@
+# https://github.com/hashicorp/terraform-provider-scaffolding/blob/main/.github/workflows/test.yml
+
 name: ci
 
 on:
+  pull_request:
+    paths-ignore:
+    - 'README.md'
   push:
-    branches:
-      - '**'
+    paths-ignore:
+    - 'README.md'
+
+  schedule:
+  - cron: '0 13 * * *'
 
 jobs:
   ci:
@@ -19,13 +27,7 @@ jobs:
 
     - uses: actions/setup-go@v1
       with:
-        go-version: '1.12'
-
-    - name: set GOPATH
-      run: |
-        echo "##[set-env name=GOPATH;]$(dirname $GITHUB_WORKSPACE)"
-        echo "##[add-path]$(dirname $GITHUB_WORKSPACE)/bin"
-      shell: bash
+        go-version: '1.16'
 
     - name: test and build
       env:

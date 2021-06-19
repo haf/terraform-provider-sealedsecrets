@@ -1,4 +1,5 @@
 # https://www.terraform.io/docs/registry/providers/publishing.html#gpg_private_key
+# https://github.com/hashicorp/terraform-provider-scaffolding/blob/main/.github/workflows/release.yml
 #
 # This GitHub action can publish assets for release when a tag is created.
 # Currently its setup to run on any tag that matches the pattern "v*" (ie. v0.1.0).
@@ -12,10 +13,12 @@
 # in `goreleaser` to indicate this is being used in a non-interactive mode.
 #
 name: cd
+
 on:
   push:
     tags:
-      - 'v*'
+    - 'v*'
+
 jobs:
   goreleaser:
     runs-on: ubuntu-latest
@@ -30,7 +33,7 @@ jobs:
         name: Set up Go
         uses: actions/setup-go@v2
         with:
-          go-version: 1.14
+          go-version: "1.16"
       -
         name: Import GPG key
         id: import_gpg
