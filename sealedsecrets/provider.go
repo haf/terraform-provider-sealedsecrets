@@ -199,11 +199,6 @@ func k8sGetOk(d *schema.ResourceData, key string) (interface{}, bool) {
 	return value, ok
 }
 
-func k8sGet(d *schema.ResourceData, key string) interface{} {
-	value, _ := k8sGetOk(d, key)
-	return value
-}
-
 var kubectlApplyRetryCount uint64
 
 func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
