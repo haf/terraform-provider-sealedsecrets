@@ -44,6 +44,7 @@ func resourceSecret() *schema.Resource {
 				Required:    true,
 				Description: "Key/value pairs to populate the secret",
 				Sensitive:   true,
+				MinItems:    1,
 			},
 			"controller_name": {
 				Type:        schema.TypeString,
