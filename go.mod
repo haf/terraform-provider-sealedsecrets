@@ -3,7 +3,6 @@ module github.com/haf/terraform-provider-sealedsecrets
 go 1.16
 
 require (
-	github.com/aws/aws-sdk-go v1.30.12 // indirect
 	github.com/bitnami-labs/sealed-secrets v0.16.0
 	github.com/cenkalti/backoff v2.2.1+incompatible
 	github.com/hashicorp/hcl/v2 v2.6.0 // indirect
