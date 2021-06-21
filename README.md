@@ -9,6 +9,8 @@ The `sealedsecrets` provider helps you manage SealedSecret objects (`bitnami.com
 K8s Secret from the key/value pairs you give as input, encrypts it using `kubeseal` and finally applies it to the cluster.
 In subsequent runs it will check if the object still exists in the cluster or if the contents have changed and act accordingly.
 
+[How to test](https://faun.pub/lets-do-devops-compile-and-test-local-terraform-provider-6f056b69c587)
+
 
 ### Usage
 

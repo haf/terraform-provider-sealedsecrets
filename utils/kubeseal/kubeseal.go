@@ -70,7 +70,7 @@ func FetchCertificate(controllerName string, controllerNamespace string, kubePro
 		ProxyGet("http", controllerName, "", "/v1/cert.pem", nil).
 		Stream(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("cannot fetch certificate: %v", err)
+		return nil, fmt.Errorf("failed to fetch certificate, ns=%q, controller=%q: %v", controllerNamespace, controllerName, err)
 	}
 
 	return f, nil
@@ -135,8 +135,7 @@ func Seal(in io.Reader, pubKey *rsa.PublicKey, scope ssv1alpha1.SealingScope, al
 		return "", err
 	}
 
-	var contentType string
-	contentType = runtime.ContentTypeYAML
+	var contentType = runtime.ContentTypeYAML
 
 	prettyEnc, err := prettyEncoder(codecs, contentType, ssv1alpha1.SchemeGroupVersion)
 	if err != nil {
