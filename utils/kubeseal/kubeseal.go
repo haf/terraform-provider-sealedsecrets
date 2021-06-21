@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 
 	ssv1alpha1 "github.com/bitnami-labs/sealed-secrets/pkg/apis/sealed-secrets/v1alpha1"
 	"github.com/bitnami-labs/sealed-secrets/pkg/multidocyaml"
@@ -55,7 +56,28 @@ func readSecret(codec runtime.Decoder, r io.Reader) (*v1.Secret, error) {
 	return &ret, nil
 }
 
+const proxyGetHelp = `kubectl proxy --port 8080 & curl -H "accept:application/json" localhost:8080/api/v1/namespaces/kube-system/services/sealed-secrets-controller/proxy/v1/cert.pem`
+
+/**
+resource "google_compute_firewall" "kubeseal" {
+  project     = "sample-project"
+  name        = "gke-kubeseal-allow-http"
+  network     = var.network
+  target_tags = local.target_tags
+  source_ranges = [
+    var.master_ipv4_cidr_block
+  ]
+
+  allow {
+    protocol = "tcp"
+    ports    = ["8080"]
+  }
+}
+*/
+
 func FetchCertificate(controllerName string, controllerNamespace string, kubeProvider *kubectl.KubeProvider) (io.ReadCloser, error) {
+	log.Printf("in FetchCertificate, client-go rest.Config: %v\n", &kubeProvider.RestConfig)
+
 	kubeProvider.RestConfig.AcceptContentTypes = "application/x-pem-file, */*"
 	restClient, err := corev1.NewForConfig(&kubeProvider.RestConfig)
 	if err != nil {
@@ -65,12 +87,13 @@ func FetchCertificate(controllerName string, controllerNamespace string, kubePro
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
+	// https://pkg.go.dev/k8s.io/client-go@v0.21.2/kubernetes/typed/core/v1?utm_source=gopls#ServiceExpansion.ProxyGet
 	f, err := restClient.
 		Services(controllerNamespace).
 		ProxyGet("http", controllerName, "", "/v1/cert.pem", nil).
 		Stream(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("failed to fetch certificate, ns=%q, controller=%q: %v", controllerNamespace, controllerName, err)
+		return nil, fmt.Errorf("failed to fetch certificate, ns=%q, svc=%q — if this is a timeout, make sure this succeeds first: %q — actual error: %v", controllerNamespace, controllerName, proxyGetHelp, err)
 	}
 
 	return f, nil
