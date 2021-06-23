@@ -22,17 +22,18 @@ func resourceSecret() *schema.Resource {
 		ReadContext:   resourceSecretRead,
 		UpdateContext: resourceSecretUpdate,
 		DeleteContext: resourceSecretDelete,
-
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "Name of the secret, must be unique",
+				ForceNew:    true,
 			},
 			"namespace": {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "Namespace of the secret",
+				ForceNew:    true,
 			},
 			"type": {
 				Type:        schema.TypeString,
