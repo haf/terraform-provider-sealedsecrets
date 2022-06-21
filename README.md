@@ -50,6 +50,12 @@ resource "sealedsecrets_secret" "pg_credentials" {
   secrets = {
     key = "value"
   }
+  annotations = {
+    key = "value"
+  }
+  labels = {
+    key = "value"
+  }
 }
 ```
 
@@ -63,7 +69,9 @@ The following arguments are supported:
 - `controller_name` - Name of the SealedSecrets controller in the cluster
 - `controller_namespace` - Namespace of the SealedSecrets controller in the cluster
 - `depends_on` - For specifying hidden dependencies.
-- `secrets` - Key/value pairs to populate the secret
+- `secrets` - Key/value pairs to populate the secret (can be empty, but not really useful here)
+- `annotations` - Key/value pairs to populate the secret (can be empty)
+- `labels` - Key/value pairs to populate the secret (can be empty)
 
 *NOTE: All the arguments above are required*
 

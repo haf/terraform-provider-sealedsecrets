@@ -61,6 +61,16 @@ func resourceSecret() *schema.Resource {
 				Computed:    true,
 				Description: "",
 			},
+			"annotations": {
+				Type:        schema.TypeMap,
+				Required:    true,
+				Description: "Key/value pairs to populate the secret annotations",
+			},
+			"labels": {
+				Type:        schema.TypeMap,
+				Required:    true,
+				Description: "Key/value pairs to populate the secret labels",
+			},
 		},
 	}
 }
@@ -154,7 +164,7 @@ func resourceSecretUpdate(ctx context.Context, d *schema.ResourceData, m interfa
 		}
 	}
 
-	if d.HasChange("name") || d.HasChange("secrets") || d.HasChange("type") {
+	if d.HasChange("name") || d.HasChange("secrets") || d.HasChange("type") || d.HasChange("annotations") || d.HasChange("labels") {
 		return resourceSecretCreate(ctx, d, m)
 	}
 
@@ -168,6 +178,8 @@ func createSealedSecret(d *schema.ResourceData, kubeProvider *kubectl.KubeProvid
 	name := d.Get("name").(string)
 	namespace := d.Get("namespace").(string)
 	_type := d.Get("type").(string)
+	annotations := d.Get("annotations").(map[string]interface{})
+	labels := d.Get("labels").(map[string]interface{})
 
 	secretsBase64 := map[string]interface{}{}
 	for key, value := range secrets {
@@ -175,7 +187,7 @@ func createSealedSecret(d *schema.ResourceData, kubeProvider *kubectl.KubeProvid
 		secretsBase64[key] = b64.StdEncoding.EncodeToString([]byte(strValue))
 	}
 
-	secretManifest, err := utils.GenerateSecretManifest(name, namespace, _type, secretsBase64)
+	secretManifest, err := utils.GenerateSecretManifest(name, namespace, _type, secretsBase64, annotations, labels)
 	if err != nil {
 		return "", err
 	}
