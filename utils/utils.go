@@ -22,11 +22,11 @@ metadata:
   namespace: {{ .Namespace }}
   annotations:
     {{- range $key, $value := .Annotations }}
-    {{ $key }}: {{ $value -}}
+    "{{ $key }}": "{{ $value -}}"
     {{ end }}
   labels:
     {{- range $key, $value := .Labels }}
-    {{ $key }}: {{ $value -}}
+    "{{ $key }}": "{{ $value -}}"
     {{ end }}
 type: {{ .Type }}`
 )
