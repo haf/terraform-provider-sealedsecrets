@@ -20,6 +20,14 @@ metadata:
   creationTimestamp: null
   name: {{ .Name }}
   namespace: {{ .Namespace }}
+  annotations:
+    {{- range $key, $value := .Annotations }}
+    "{{ $key }}": "{{ $value -}}"
+    {{ end }}
+  labels:
+    {{- range $key, $value := .Labels }}
+    "{{ $key }}": "{{ $value -}}"
+    {{ end }}
 type: {{ .Type }}`
 )
 
@@ -28,6 +36,8 @@ type SecretManifest struct {
 	Namespace string
 	Type      string
 	Secrets   map[string]interface{}
+	Annotations   map[string]interface{}
+	Labels   map[string]interface{}
 }
 
 func SHA256(src string) string {
@@ -36,7 +46,7 @@ func SHA256(src string) string {
 	return fmt.Sprintf("%x", h.Sum(nil))
 }
 
-func GenerateSecretManifest(name string, namespace string, _type string, secrets map[string]interface{}) (io.Reader, error) {
+func GenerateSecretManifest(name string, namespace string, _type string, secrets map[string]interface{}, annotations map[string]interface{}, labels map[string]interface{}) (io.Reader, error) {
 	secretManifestYAML := new(bytes.Buffer)
 
 	secretManifest := SecretManifest{
@@ -44,6 +54,8 @@ func GenerateSecretManifest(name string, namespace string, _type string, secrets
 		Namespace: namespace,
 		Type:      _type,
 		Secrets:   secrets,
+		Annotations: annotations,
+		Labels: labels,
 	}
 
 	t := template.Must(template.New("secretManifestTemplate").Parse(secretManifestTemplate))
